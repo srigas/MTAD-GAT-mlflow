@@ -1,9 +1,9 @@
 import os
 import numpy as np
 import datetime
-import json
 from torch.utils.data import DataLoader, Dataset, Subset
 from spot import SPOT
+import mlflow
 
 
 def get_data(dataset, mode="train", start=0, end=None):
@@ -98,38 +98,43 @@ def create_data_loader(dataset, batch_size, val_split=0.1, shuffle=True):
     return loader, extra_loader
 
 
-def get_model_id(model_id, dataset):
-    """Transform a console's input model_id to an actual model_id, in case a user
-       inputs numbers such as -1, -2, etc.
+def get_run_id(run_name, experiment_name):
+    """Transform an input run_name to the run_id
 
-    :param model_id: the input model_id to be transformed
-    :param dataset: the name of the dataset in which to look for model_ids
+    :param run_name: the input run_name to be transformed
+    :param experiment_name: the name of the experiment in which to look for runs
     """
 
-    # If no model_id is given, the last trained model is used
-    if model_id is None:
-        model_id = "-1"
+    # If no run_name is given, the last run is retrieved
+    if run_name is None:
+        run_name = "-1"
     else:
-        model_id = model_id
+        run_name = str(run_name)
 
-    if model_id.startswith('-'):
-        dir_path = f"./output/{dataset}"
-        dir_content = os.listdir(dir_path)
-        subfolders = [subf for subf in dir_content if os.path.isdir(f"{dir_path}/{subf}") and subf != "logs"]
-        date_times = [datetime.datetime.strptime(subf, '%d%m%Y_%H%M%S') for subf in subfolders]
+    # get corresponding experiment (using experiment_name)
+    exp = mlflow.get_experiment_by_name(experiment_name)
+    exp_id = exp.experiment_id
+
+    # If run_name is given as a relative value (-1, -2, etc.), get the actual name
+    if run_name.startswith('-'):
+        
+        runs = mlflow.search_runs(experiment_ids=exp_id)
+        run_names = runs["tags.mlflow.runName"].values.tolist()
+        date_times = [datetime.datetime.strptime(rn, '%d%m%Y_%H%M%S') for rn in run_names]
         date_times.sort()
-        model_datetime = date_times[int(model_id)]
-        model_id = model_datetime.strftime('%d%m%Y_%H%M%S')
+        model_datetime = date_times[int(run_name)]
+        run_name = model_datetime.strftime('%d%m%Y_%H%M%S')
+    
+    # Given the actual name, retrieve the run id
+    run = mlflow.search_runs(experiment_ids=exp_id, filter_string=f'tags."mlflow.runName" = "{run_name}"')
+    run_id = run['run_id'][0]
 
-    return model_id
+    return run_id
 
 
 # ------------------------ THRESHOLD UTILITIES ------------------------------
 
 
-# #############################################
-# TODO: Add variants of POT as option as well #
-# #############################################
 def pot_threshold(init_score, score, q=1e-3, level=0.99, dynamic=False):
     """
     Run POT method on given score.
@@ -206,22 +211,30 @@ def find_epsilon(errors, reg_level=1):
     return best_epsilon
 
 
-def update_json(path, new_data):
-    """Opens a .json file and updates its contents with new data
-    :param path: path to look for the json file
-    :param new_data: dictionary that contains the updates as key-value pairs    
+def json_to_numpy(path):
+    """Opens a .json artifact and casts its values as a numpy array
+    :param path: path to look for the json artifact 
+    """
+
+    data = mlflow.artifacts.load_dict(path)
+
+    npfile = np.asarray(list(data.values())).flatten()
+
+    return npfile
+
+
+def update_json(uri, name, new_data):
+    """Opens a .json artifact and updates its contents with new data
+    :param path: path to look for the json artifact
+    :param new_data: dictionary that contains the new contents as key-value pairs    
     """
     try:
-        with open(path, 'r') as json_file:
-            data = json.load(json_file)
-    
-        data.update(new_data) # update
-    # case where file doesn't exist yet
-    except (json.decoder.JSONDecodeError, FileNotFoundError):
+        data = mlflow.artifacts.load_dict(uri+"/"+name)
+        data.update(new_data)
+    except mlflow.exceptions.MlflowException:
         data = new_data
 
-    with open(path, 'w', encoding='utf-8') as json_file:
-        json.dump(data, json_file, ensure_ascii=False, indent=4)
+    mlflow.log_dict(data, name)
 
 
 # ------------------------ EVALUATION UTILITIES ------------------------------

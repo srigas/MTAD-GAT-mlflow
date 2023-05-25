@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import pandas as pd
 
+import mlflow
+
 
 class Handler:
     """Handler class for the model defined in architecture.py
@@ -21,7 +23,6 @@ class Handler:
     :param forecast_criterion: Loss to be used for forecasting.
     :param recon_criterion: Loss to be used for reconstruction.
     :param use_cuda: To be run on GPU or not (boolean)
-    :param dload: Download directory where models are to be dumped
     :param print_every: At what epoch interval to print losses
     :param gamma: Gamma parameter for getting anomaly scores
     """
@@ -39,7 +40,6 @@ class Handler:
         forecast_criterion=nn.MSELoss(),
         recon_criterion=nn.MSELoss(),
         use_cuda=True,
-        dload="",
         print_every=1,
         gamma=1.0
     ):
@@ -55,18 +55,9 @@ class Handler:
         self.forecast_criterion = forecast_criterion
         self.recon_criterion = recon_criterion
         self.device = "cuda" if use_cuda and torch.cuda.is_available() else "cpu"
-        self.dload = dload
         self.print_every = print_every
         self.gamma = gamma
 
-        self.losses = {
-            "train_total": [],
-            "train_forecast": [],
-            "train_recon": [],
-            "val_total": [],
-            "val_forecast": [],
-            "val_recon": [],
-        }
         self.epoch_times = []
 
         if self.device == "cuda":
@@ -147,23 +138,22 @@ class Handler:
             epoch_start = time.time() # start timing epoch
             
             train_fc_loss, train_rc_loss = self.pass_epoch(train_loader, "train")
+            total_train_loss = train_fc_loss+train_rc_loss
             # Vary learning rate
             self.scheduler.step()
 
-            self.losses["train_forecast"].append(train_fc_loss)
-            self.losses["train_recon"].append(train_rc_loss)
-
-            total_train_loss = train_fc_loss+train_rc_loss
-            self.losses["train_total"].append(total_train_loss)
+            mlflow.log_metric(key="train_fc_loss", value=train_fc_loss, step=epoch+1)
+            mlflow.log_metric(key="train_rc_loss", value=train_rc_loss, step=epoch+1)
+            mlflow.log_metric(key="total_train_loss", value=total_train_loss, step=epoch+1)
 
             # Evaluate on validation set if a val_loader is provided
             if val_loader is not None:
                 val_fc_loss, val_rc_loss = self.pass_epoch(val_loader, None)
-                self.losses["val_forecast"].append(val_fc_loss)
-                self.losses["val_recon"].append(val_rc_loss)
-
                 total_val_loss = val_fc_loss+val_rc_loss
-                self.losses["val_total"].append(total_val_loss)
+
+                mlflow.log_metric(key="val_fc_loss", value=val_fc_loss, step=epoch+1)
+                mlflow.log_metric(key="val_rc_loss", value=val_rc_loss, step=epoch+1)
+                mlflow.log_metric(key="total_val_loss", value=total_val_loss, step=epoch+1)
 
                 if self.patience is not None:
                     # Save the model only if val loss decreased
@@ -204,10 +194,9 @@ class Handler:
 
                 print(s)
                 
-        if val_loader is None:
-            self.save(f"model.pt")
-        else:
-            self.load(self.dload + "/model.pt")
+        if val_loader is not None:
+            self.load("model.pt")
+            os.remove("model.pt") # it is logged through mlflow either way
 
         train_time = int(time.time() - train_start)
         print(f"\nTraining finished after {train_time}s.")
@@ -279,14 +268,9 @@ class Handler:
     def save(self, file_name):
         """
         Pickles the model parameters to be retrieved later
-        :param file_name: the filename to be saved as,`dload` serves as the download directory
+        :param file_name: the filename to be saved as
         """
-        PATH = self.dload + "/" + file_name
-        if os.path.exists(self.dload):
-            pass
-        else:
-            os.mkdir(self.dload)
-        torch.save(self.model.state_dict(), PATH)
+        torch.save(self.model.state_dict(), file_name)
 
     def load(self, PATH):
         """

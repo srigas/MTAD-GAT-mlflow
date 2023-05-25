@@ -71,8 +71,8 @@ def predict_parser():
     parser.add_argument("--eval_end", type=int, default=None)
 
     # --- Model params ---
-    parser.add_argument("--model_id", type=str, default="-1",
-                        help="ID (datetime) of pretrained model to use, or -1, -2, etc. to use last, previous from last, etc. model.")
+    parser.add_argument("--run_name", type=str, default="-1",
+                        help="name of run to use, or -1, -2, etc. to find last, previous from last, etc. run.")
 
     # --- Predict params ---
     parser.add_argument("--use_cuda", type=str2bool, default=True)
