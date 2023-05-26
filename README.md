@@ -48,7 +48,7 @@ During a training experiment's runs, a series of parameters, metrics and artifac
 
 ## 📌 Streamlit UI
 
-To be able to perform more detailed debugging and model tuning, this repository also contains a Streamlit UI (see [here](/streamlit)). The server connects to MLflow's tracking server's URI and loads all the available runs. By choosing a run by run name, a user is able to investigate detailed plots concerning the model's training & evaluation, including its losses during training, its final predictions per threshold and how they relate to the ground truth, as well as how successful the reconstruction and forecasting of each feature is. To run the streamlit UI locally simply log into Streamlit's directory, install the requirements and after setting up the proper tracking URI in the [app.py](/app.py) file run
+To be able to perform more detailed debugging and model tuning, this repository also contains a Streamlit UI (see [here](/streamlit)). The server connects to MLflow's tracking server's URI and loads all the available runs. By choosing a run by run name, a user is able to investigate detailed plots concerning the model's training & evaluation, including its losses during training, its final predictions per threshold and how they relate to the ground truth, as well as how successful the reconstruction and forecasting of each feature is. To run the streamlit UI locally simply log into Streamlit's directory, install the requirements and after setting up the proper tracking URI in the [app.py](/streamlit/app.py) file run
 
 ```
 streamlit run app.py
