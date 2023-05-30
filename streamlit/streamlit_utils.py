@@ -59,22 +59,19 @@ def plot_losses(client, run_id):
 
     return fig1, fig2, fig3
 
-def get_labels(dataset):
+def get_labels(art_uri):
 
-    current_dir = os.getcwd()
-    parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-
-    labels = np.loadtxt(os.path.join(parent_dir, f"datasets/{dataset}/labels.txt"), delimiter=",", dtype=int)
+    labels = json_to_numpy(art_uri+"/labels.json")
 
     return labels
 
-def plot_scores(dataset, art_uri, threshold):
+def plot_scores(art_uri, threshold):
 
     # Load scores
     scores = json_to_numpy(art_uri+"/eval_scores.json")
 
     # load ground truth
-    labels = get_labels(dataset)
+    labels = get_labels(art_uri)
 
     # Get actual predictions given the scores and threshold
     anoms = np.asarray([0 if score < threshold else 1 for score in scores])
@@ -116,13 +113,13 @@ def plot_scores(dataset, art_uri, threshold):
 
     return fig
 
-def plot_correct_preds(dataset, art_uri, threshold):
+def plot_correct_preds(art_uri, threshold):
 
     # Load scores
     scores = json_to_numpy(art_uri+"/eval_scores.json")
 
     # load ground truth
-    labels = get_labels(dataset)
+    labels = get_labels(art_uri)
 
     # Get actual predictions given the scores and threshold
     anoms = np.asarray([0 if score < threshold else 1 for score in scores])
@@ -169,14 +166,14 @@ def plot_correct_preds(dataset, art_uri, threshold):
 
     return fig
 
-def plot_feat_details(dataset, df, feat, start=0, end=None):
+def plot_feat_details(art_uri, df, feat, start=0, end=None):
     fcs = df[f'FC_{feat}'].values[start:end]
     recons = df[f'RECON_{feat}'].values[start:end]
     actual = df[f'TRUE_{feat}'].values[start:end]
     scores = df[f'SCORE_{feat}'].values[start:end]
 
     # load ground truth
-    labels = get_labels(dataset)
+    labels = get_labels(art_uri)
 
     # Make ranges for actual anomalies
     inds, xs = anoms_to_indices(labels)

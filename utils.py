@@ -6,6 +6,45 @@ from spot import SPOT
 import mlflow
 
 
+# ------------------------ DATABRICKS UTILITIES ------------------------------
+
+def str2bool(input_string):
+    """Transform various ways of writing yes/no uniformly
+
+    :param input_string: string to be transformed
+    """
+    if input_string.lower() in ("yes", "true", "t", "y", "1"):
+        return "True"
+    elif input_string.lower() in ("no", "false", "f", "n", "0"):
+        return "False"
+    else:
+        return input_string
+
+
+def str2type(input_string):
+    """Transform an input string to the corresponding type, based on its contents
+
+    :param input_string: string to be transformed
+    """
+
+    input_string = str2bool(input_string)
+
+    if input_string == "True":
+        output = True
+    elif input_string == "False":
+        output = False
+    elif input_string == "None":
+        output = None
+    # This is a very specific case, e.g. for the "patience" or "train_end" parameters
+    else:
+        output = int(input_string)
+
+    return output
+
+
+# ------------------------ DATA UTILITIES ------------------------------
+
+
 def get_data(dataset, mode="train", start=0, end=None):
     """Get data to be used for training/validation/evaluation
 
@@ -14,7 +53,7 @@ def get_data(dataset, mode="train", start=0, end=None):
     :param end: ending index of dataset if not all data are to be used
     """
     
-    dataset_folder = os.path.join("datasets", dataset)
+    dataset_folder = os.path.join("/dbfs/mnt/datasets", dataset)
 
     # Load the data
     # WARNING: For good evaluation/inference, a total of window_size data need to be taken

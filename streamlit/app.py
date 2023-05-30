@@ -41,7 +41,7 @@ def check_password():
 if check_password():
 
     # Set the proper mlflow tracking URI, or comment to use default
-    mlflow.set_tracking_uri("file:///C:/Users/rigas/Desktop/MTAD-GAT-mlflow/mlruns")
+    mlflow.set_tracking_uri("databricks")
 
     # Setup client to get metrics later on
     client = mlflow.MlflowClient()
@@ -58,7 +58,7 @@ if check_password():
         st.markdown("""## Find run for inspection""")
         dataset = st.text_input("Choose Dataset", "system_1")
 
-        exp_name = f"{dataset}_training"
+        exp_name = f"/Experiments/{dataset}_training"
         runs_df = mlflow.search_runs(experiment_names=[exp_name])
         names = runs_df['tags.mlflow.runName']
 
@@ -103,14 +103,14 @@ if check_password():
 
     if thresh_choice != "None":
         threshold = thresholds[thresh_choice]
-        figA = plot_scores(dataset, art_uri, threshold)
+        figA = plot_scores(art_uri, threshold)
 
         st.plotly_chart(figA)
 
         show_correct_preds = st.checkbox('Show the scores along with the correctly predicted anomalies')
 
         if show_correct_preds:
-            figB = plot_correct_preds(dataset, art_uri, threshold)
+            figB = plot_correct_preds(art_uri, threshold)
             st.plotly_chart(figB)
 
 
@@ -133,7 +133,7 @@ if check_password():
         slider_max = df.shape[0]
         (start_plot, end_plot) = st.slider("Choose a range index", min_value=0, max_value=slider_max, value=(0,slider_max))
 
-        figC1, figC2 = plot_feat_details(dataset, df, feat, start=start_plot, end=end_plot)
+        figC1, figC2 = plot_feat_details(art_uri, df, feat, start=start_plot, end=end_plot)
 
         st.plotly_chart(figC1)
         st.plotly_chart(figC2)
