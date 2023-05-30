@@ -1,8 +1,12 @@
-# MTAD-GAT meets MLflow
+# MTAD-GAT meets MLflow (Cloud Version)
 
-The present repository contains modularized code and files related to the MTAD-GAT model for multivariate time-series anomaly detection, written using MLflow's Tracking and Model components. Apart from MLflow's built-in UI, code for an additional UI written in Streamlit is provided, to be used for detailed model debugging and tuning.
+This is the `cloud` branch of the original repository, containing the revised code so that it can be run in a Databricks environment through external Databricks jobs.
 
-## 📌 MTAD-GAT
+## 📌 Differences
+
+• There is no `requirements.txt` file in the parent directory. This is because the code is expected to be run in a Databricks environment using a ML cluster, where all required libraries are pre-installed.
+
+• There is no `args.txt` file. This is because the code is not completely modularized as in the original version. Instead, the four `.py` files are 
 
 The main directory contains the code for the MTAD-GAT model. To run the code, create a new conda environment using
 
