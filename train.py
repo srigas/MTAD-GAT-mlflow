@@ -104,10 +104,10 @@ if __name__ == "__main__":
 
         # Get scores for training data to be used for thresholds later on
         print("Calculating scores on training data to be used for thresholding...")
-        anom_scores = handler.score(loader=train_loader, details=False)
+        anom_scores, _ = handler.score(loader=train_loader, details=False)
         # Also get the ones from the validation data
         if val_loader is not None:
-            val_scores = handler.score(loader=val_loader, details=False)
+            val_scores, _ = handler.score(loader=val_loader, details=False)
             anom_scores = np.concatenate((anom_scores, val_scores), axis=0)
 
         # get threshold using epsilon method

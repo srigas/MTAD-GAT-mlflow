@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
         # Get new scores (inference needs to be fast, no details needed)
         print("Calculating scores on new data...")
-        new_scores = handler.score(loader=new_loader, details=False)
+        new_scores, _ = handler.score(loader=new_loader, details=False)
 
         # Calculate threshold via POT based on the new_scores
         if args.threshold == "POT":
