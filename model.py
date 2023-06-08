@@ -253,7 +253,7 @@ class Handler:
             df = pd.DataFrame(df)
             return anomaly_scores, df
 
-        return anomaly_scores
+        return anomaly_scores, None
     
     def predict(self, scores, threshold):
         """Method that predicts anomalies given scores and a threshold
