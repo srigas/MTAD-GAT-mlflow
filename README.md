@@ -1,6 +1,6 @@
 # MTAD-GAT meets MLflow
 
-The present repository contains modularized code and files related to the MTAD-GAT model for multivariate time-series anomaly detection, written using MLflow's Tracking and Model components. Apart from MLflow's built-in UI, code for an additional UI written in Streamlit is provided, to be used for detailed model debugging and tuning.
+The present repository contains modularized code and files related to the [MTAD-GAT model](https://github.com/ML4ITS/mtad-gat-pytorch) for multivariate time-series anomaly detection, written using MLflow's Tracking and Model components. Apart from MLflow's built-in UI, code for an additional UI written in Streamlit is provided, to be used for detailed model debugging and tuning.
 
 ## 📌 MTAD-GAT
 
